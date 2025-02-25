@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PseudoX</title>
+  <link href="/static/styles.css" rel="stylesheet">
+</head>
+<body>
+<!-- Navigation Bar -->
+<nav class="navbar">
+  <div class="container">
+    <a href="#" class="logo">PseudoX</a>
+    <div class="nav-links">
+      <a href="#">Home</a>
+      <a href="#">Explore</a>
+      <a href="#">Notifications</a>
+      <a href="#">Messages</a>
+      <a onclick="openProfile()">Profile</a>
+    </div>
+    <div class="auth-buttons">
+      <button class="auth-button" onclick="openLoginModal()">Se connecter</button>
+      <button class="auth-button primary" onclick="openSignupModal()">S'inscrire</button>
+    </div>
+  </div>
+</nav>
+
+  <!-- Main Content -->
+  <div class="container main-content">
+    <!-- Feed -->
+    <div class="feed">
+    <!-- Tweet Box -->
+      <form id="tweetBox" class="tweet-box">
+          <textarea placeholder="What's happening?" rows="3"></textarea>
+          <div class="tweet-actions">
+              <button type="submit" class="tweet-button">Tweet</button>
+          </div>
+      </form>
+      <!-- Tweets -->
+      <div id="tweets-container">
+        <!-- Tweets will be dynamically inserted here by JavaScript -->
+      </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <h2>Trending</h2>
+      <ul>
+        <li>#PseudoX</li>
+        <li>#CTF</li>
+        <li>#Hacking</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Login Modal -->
+  <div id="loginModal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeLoginModal()">&times;</span>
+      <h2>Se connecter</h2>
+      <form id="loginForm">
+        <input name="username" type="text" placeholder="Nom d'utilisateur" required />
+        <input name="password" type="password" placeholder="Mot de passe" required />
+        <button type="submit">Se connecter</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Signup Modal -->
+  <div id="signupModal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeSignupModal()">&times;</span>
+      <h2>S'inscrire</h2>
+      <form id="signupForm">
+        <input name="full_name" type="text" placeholder="Nom complet" required minlength="3" maxlength="50" />
+        <input name="username" type="text" placeholder="Nom d'utilisateur"  minlength="3" maxlength="50" />
+        <input name="email" type="email" placeholder="Email" required />
+        <input name="password" type="password" placeholder="Mot de passe" required minlength="8" maxlength="50"/>
+        <button type="submit">S'inscrire</button>
+      </form>
+    </div>
+  </div>
+
+ <!-- JavaScript -->
+  <script src="/static/script.js"></script>
+</body>
+</html>
