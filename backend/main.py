@@ -18,8 +18,14 @@ from email_validator import validate_email, EmailNotValidError
 from starlette.middleware.base import BaseHTTPMiddleware
 import re
 
+#chemin des fichiers 
+
+path = "/var/www/html/"
+
+
+
 # Configuration de la sécurité
-SECRET_KEY = "your-secret-key-here"  # À changer en production !
+SECRET_KEY = "your-secret-key-here"  
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
@@ -474,6 +480,7 @@ async def create_tweet(
 
 """
 
+
 # Handler pour TOUTES les erreurs HTTP (y compris 403, 500, etc.)
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):
@@ -540,13 +547,13 @@ async def serve_index():
 @app.get("/profile", response_class=HTMLResponse)
 async def profile_page():
     try:
-        with open("../frontend/profile.html", "r") as f:
+        with open(path+"frontend/profile.html", "r") as f:
             return HTMLResponse(content=f.read())
     except FileNotFoundError:
         raise HTTPException(status_code=404, detail="Frontend file not found")
 
 # Configuration des fichiers statiques avec sécurité
-app.mount("/static", StaticFiles(directory="/var/www/html/frontend/static", html=True), name="frontend")
+app.mount("/static", StaticFiles(directory=path+"frontend/static", html=True), name="frontend")
 
 # Lancement du serveur
 if __name__ == "__main__":

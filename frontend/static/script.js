@@ -49,9 +49,9 @@ async function likeTweet(tweetId) {
   const token = localStorage.getItem('authToken');
   if (token) {
     try {
-      // Faire une requête PATCH ou PUT pour mettre à jour les likes du tweet sur le serveur
+      // Faire une requête PATCH pour mettre à jour les likes du tweet sur le serveur
       const response = await fetch(`/api/tweets/${tweetId}/like`, {
-        method: 'PATCH', // ou 'PUT' selon votre API
+        method: 'PATCH', 
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
@@ -76,9 +76,9 @@ async function retweet(tweetId) {
   const token = localStorage.getItem('authToken');
   if (token) {
     try {
-      // Faire une requête PATCH ou PUT pour mettre à jour les retweets du tweet sur le serveur
+      // Faire une requête PATCH  pour mettre à jour les retweets du tweet sur le serveur
       const response = await fetch(`/api/tweets/${tweetId}/retweet`, {
-        method: 'PATCH', // ou 'PUT' selon votre API
+        method: 'PATCH', 
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
