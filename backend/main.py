@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException, Request, Depends, Security
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from pydantic import BaseModel, EmailStr, constr
 from typing import Optional, List,Dict
@@ -200,28 +200,17 @@ def get_db():
         db.close()
 
 
-# Dépendance pour obtenir l'utilisateur actuel
-async def get_current_user(
-    token: str = Depends(oauth2_scheme),
-    db: Session = Depends(get_db)
-) -> UserDB:
-    credentials_exception = HTTPException(
-        status_code=401,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
+# Dépendance pour vérifier si le token est actif
+async def is_token_active(
+    token: str = Depends(oauth2_scheme)
+) -> bool:
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        username: str = payload.get("sub")
-        if username is None:
-            raise credentials_exception
+        if payload.get("exp") < datetime.utcnow().timestamp():
+            return False
+        return True
     except jwt.PyJWTError:
-        raise credentials_exception
-
-    user = db.query(UserDB).filter(UserDB.username == username).first()
-    if user is None:
-        raise credentials_exception
-    return user
+        return False
 
 
 
@@ -326,44 +315,56 @@ async def login(user: UserLogin, db: Session = Depends(get_db)):
         )
 
 
-@app.get("/api/users/{user_id}", response_model=User)
+@app.get("/api/users/{user_id}")
 async def get_user(
     user_id: int,
-    current_user: UserDB = Depends(get_current_user),  # Ajout de la vérification
     db: Session = Depends(get_db)
 ):
-    if user_id == 0 :
+    if user_id == 0:
         user = db.query(AdminDB).filter(AdminDB.id == user_id).first()
-    else : 
+        if not user:
+            raise HTTPException(status_code=404, detail="Admin not found")
+        return JSONResponse(content={"id": user.id, "username": user.username})
+    else:
         user = db.query(UserDB).filter(UserDB.id == user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    return user
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        return JSONResponse(content={
+            "id": user.id,
+            "username": user.username,
+            "email": user.email,
+            "full_name": user.full_name,
+            "avatar": user.avatar,
+            "created_at": user.created_at,
+            "updated_at": user.updated_at
+        })
 
 
 
 
 @app.patch("/api/users/{user_id}/password")
-def change_pwd(user_id: int,password : UpdatePwd,current_user: UserDB = Depends(get_current_user),  # Ajout de la vérification
+def change_pwd(user_id: int,password : UpdatePwd, is_active: bool = Depends(is_token_active),  # Ajout de la vérification
     db: Session = Depends(get_db)):
     new_pwd = password.password
     hashed_password = get_password_hash(new_pwd)
-
-    if user_id == 0 :
-        user_db = db.query(AdminDB).filter(AdminDB.id == user_id).first()
-        os.system(f'echo "adm_pseudoX:{new_pwd}" | chpasswd')
+    if not is_active:
+        raise HTTPException(status_code=401, detail="Token expired")
     else : 
-        user_db = db.query(UserDB).filter(UserDB.id == user_id).first()
-
-    if user_db :
-        user_db.password_hash = hashed_password
-        db.commit()
-        db.refresh(user_db) 
         if user_id == 0 :
-            return {"message": "ssh password updated for admin"}
+            user_db = db.query(AdminDB).filter(AdminDB.id == user_id).first()
+            os.system(f'echo "adm_pseudoX:{new_pwd}" | chpasswd')
         else : 
-            return {"message": "password updated"}
-    raise HTTPException(status_code=404, detail="user not found")
+            user_db = db.query(UserDB).filter(UserDB.id == user_id).first()
+
+        if user_db :
+            user_db.password_hash = hashed_password
+            db.commit()
+            db.refresh(user_db) 
+            if user_id == 0 :
+                return {"message": "ssh password updated for admin"}
+            else : 
+                return {"message": "password updated"}
+        raise HTTPException(status_code=404, detail="user not found")
 
 
 
@@ -375,7 +376,7 @@ def change_pwd(user_id: int,password : UpdatePwd,current_user: UserDB = Depends(
 
 """
 @app.get("/api/tweets/{user_id}", response_model=List[TweetResponse])
-async def get_tweet_user(user_id: int,#current_user: UserDB = Depends(get_current_user),  # Ajout de la vérification
+async def get_tweet_user(user_id: int, is_active: bool = Depends(is_token_active),  # Ajout de la vérification
    db: Session = Depends(get_db)):
     tweets = (
         db.query(TweetDB, UserDB)
@@ -437,7 +438,7 @@ async def get_all_tweets(
     return result
 
 @app.patch("/api/tweets/{tweet_id}/like")
-async def like_tweet(tweet_id: int,current_user: UserDB = Depends(get_current_user),  # Ajout de la vérification
+async def like_tweet(tweet_id: int, #current_user: UserDB = Depends(get_current_user),  # Ajout de la vérification
     db: Session = Depends(get_db)):
     tweet = db.query(TweetDB).filter(TweetDB.id == tweet_id).first()
     if tweet:
@@ -447,7 +448,7 @@ async def like_tweet(tweet_id: int,current_user: UserDB = Depends(get_current_us
     raise HTTPException(status_code=404, detail="Tweet not found")
 
 @app.patch("/api/tweets/{tweet_id}/retweet")
-async def retweet(tweet_id: int,current_user: UserDB = Depends(get_current_user),  # Ajout de la vérification
+async def retweet(tweet_id: int, is_active: bool = Depends(is_token_active),  # Ajout de la vérification
     db: Session = Depends(get_db)):
     tweet = db.query(TweetDB).filter(TweetDB.id == tweet_id).first()
     if tweet:
@@ -463,7 +464,7 @@ async def create_tweet(
     content: str,
     user_id: int,
     db: Session = Depends(get_db),
-    current_user: UserDB = Depends(get_current_user),  # Ajout de la vérification
+     is_active: bool = Depends(is_token_active),  # Ajout de la vérification
    
 ):
     if not content or len(content) > 280:

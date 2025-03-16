@@ -11,7 +11,7 @@ function getUserIdFromUrl() {
 async function loadProfile() {
     const token = localStorage.getItem('authToken')
     const userId = getUserIdFromUrl();
-    if (!userId) return;
+    if (!userId) return null;
 
     try {
         const response = await fetch(`http://localhost:6080/api/users/${userId}`,{
@@ -22,14 +22,13 @@ async function loadProfile() {
             }
         });
         const user = await response.json();
-        
-        document.getElementById('fullName').value = user.full_name || '';
-        document.getElementById('email').value = user.email || '';
-
+    
         currentUser = user;
+        return user;
 
     } catch (error) {
-        alert('Erreur de chargement du profil');
+        alert('Erreur de chargement du profil :'+error);
+        return null;
     }
 }
 
@@ -40,7 +39,7 @@ async function displayUserTweet(){
     tweetsContainer.innerHTML = "";
     try {
         // Faire une requête GET à l'API pour obtenir les tweets
-        const response = await fetch(`/api/tweets/${currentUser.id}`,{
+        const response = await fetch(`/api/tweets/${getUserIdFromUrl()}`,{
             method : 'GET', 
             headers: {
                 'Authorization': `Bearer ${token}`,
@@ -92,7 +91,8 @@ async function displayUserTweet(){
 
 
 
-function displayParameter(){
+async function displayParameter(){
+    user =  await loadProfile();
     const profileSection = document.getElementById('container');
     profileSection.innerHTML = "";
     if (!profileSection) {
@@ -105,11 +105,10 @@ function displayParameter(){
             
             <!-- Section Informations Utilisateur -->
             <div class="profile-card">
-                <h2>Nom d'utilisateur: <span id="username">${currentUser ? currentUser.username : ''}</span></h2> 
+                <h2>Nom d'utilisateur: <span id="username">${user ? user.username : ''}</span></h2> 
             </div>
             <div class="profile-card">
                 <h2>Informations Personnelles</h2>
-                <p>Nom d'utilisateur: <span id="username">${currentUser ? currentUser.username : ''}</span></p>
                 <form id="profileForm">
                     <input type="text" id="fullName" placeholder="Nom complet">
                     <input type="email" id="email" placeholder="Email">
@@ -134,7 +133,6 @@ function displayParameter(){
                 <button onclick="location.href='/ssh'">Se connecter au Backend</button>
             </div>
         `;
-        loadProfile();
         PasswordManager();
 }
 
@@ -158,7 +156,7 @@ function PasswordManager(){    // Gestion du formulaire de mot de passe
                         password: newPassword })
                 });
 
-                alert('mot de passe changé');
+                alert(response.statusText);
             } catch (error) {
                 console.log('Échec du changement de mot de passe',error);
             }
