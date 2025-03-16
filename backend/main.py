@@ -16,16 +16,15 @@ import jwt
 from passlib.context import CryptContext
 from email_validator import validate_email, EmailNotValidError
 from starlette.middleware.base import BaseHTTPMiddleware
-import re
 
-#chemin des fichiers 
+
+
+# Chemin des fichiers : 
 
 path = "/var/www/html/"
 
-
-
 # Configuration de la sécurité
-SECRET_KEY = "your-secret-key-here"  
+SECRET_KEY = "your-secret-key-here"  # À changer en production !
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
@@ -60,6 +59,17 @@ class UserDB(Base):
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
 
+class AdminDB(Base):
+    __tablename__ = "admins"
+
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String(50), unique=True, index=True, nullable=False)
+    password_hash = Column(String(200), nullable=False)
+
+    @property
+    def formatted_id(self):
+        return f"0{self.id}"
+
 class TweetDB(Base):
     __tablename__ = "tweets"
 
@@ -76,6 +86,7 @@ Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
+"""
 # Middleware pour intercepter les erreurs 404
 class Catch404Middleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
@@ -88,6 +99,8 @@ class Catch404Middleware(BaseHTTPMiddleware):
                 response = RedirectResponse(url="/error/404")
         return response
 
+"""
+
 # CORS middleware avec restrictions
 app.add_middleware(
     CORSMiddleware,
@@ -98,8 +111,14 @@ app.add_middleware(
 )
 
 # Ajouter le middleware Catch404
-app.add_middleware(Catch404Middleware)
+#app.add_middleware(Catch404Middleware)
 
+
+"""
+
+----------------  MODELES DE DONNEES -------------------------------------
+
+"""
 
 class UserLogin(BaseModel):
     username: constr(min_length=3, max_length=50)
@@ -150,12 +169,11 @@ class TweetResponse(BaseModel):
 
 """
 
-
 ----------------  FONCTIONS DE SECURITE -------------------------------------
 
-
-
 """
+
+# Fonctions de sécurité
 def get_password_hash(password: str) -> str:
     return pwd_context.hash(password)
 
@@ -172,14 +190,6 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
-def sanitize_input(input_string: str, max_length: int = 255) -> str:
-    # Remove potentially dangerous characters
-    sanitized = re.sub(r"[;\"'\\()=]", "", input_string)
-
-    # Truncate the input to the maximum allowed length
-    sanitized = sanitized[:max_length]
-
-    return sanitized
 
 # Dépendance pour la base de données avec protection contre les injections SQL
 def get_db():
@@ -243,10 +253,7 @@ async def register(user: UserCreate, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Password must be at least 8 characters long")
     if len(user.full_name) < 2:
         raise HTTPException(status_code=400, detail="Full name must be at least 2 characters long")
-    
-    user.username = sanitize_input(user.username)
-    user.full_name = sanitize_input(user.full_name)
-    
+
     # Vérification de l'existence de l'utilisateur
     db_user = db.query(UserDB).filter(
         func.lower(UserDB.username) == func.lower(user.username)
@@ -254,6 +261,9 @@ async def register(user: UserCreate, db: Session = Depends(get_db)):
     
     if db_user:
         raise HTTPException(status_code=400, detail="Username already taken")
+
+    if user.username.startswith("adm_"):
+        raise HTTPException(status_code=400, detail="Invalid username")
 
     try:
         # Création de l'utilisateur
@@ -279,24 +289,21 @@ async def register(user: UserCreate, db: Session = Depends(get_db)):
 @app.post("/api/login")
 async def login(user: UserLogin, db: Session = Depends(get_db)):
     try:
-         
-        user.username = sanitize_input(user.username)
-        # Recherche de l'utilisateur de manière sécurisée
-        user_db = db.query(UserDB).filter(UserDB.username == user.username).first()
-        
-        # Vérification de l'utilisateur et du mot de passe
-        if not user_db:
-            raise HTTPException(
-                status_code=401,
-                detail="Incorrect username or password"
-            )
+        if not user.username.startswith("adm_"):
+            # Recherche de l'utilisateur de manière sécurisée
+            user_db = db.query(UserDB).filter(UserDB.username == user.username).first()
             
-        if not verify_password(user.password, user_db.password_hash):
+        else : 
+            user_db = db.query(AdminDB).filter(AdminDB.username == user.username).first()
+            
+        # Vérification de l'utilisateur et du mot de passe
+     
+        if not verify_password(user.password, user_db.password_hash) or not user_db:
             raise HTTPException(
                 status_code=401,
                 detail="Incorrect username or password"
             )
-        
+
         # Création du token
         access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
         access_token = create_access_token(
@@ -325,8 +332,10 @@ async def get_user(
     current_user: UserDB = Depends(get_current_user),  # Ajout de la vérification
     db: Session = Depends(get_db)
 ):
-    user.username = sanitize_input(user.username)
-    user = db.query(UserDB).filter(UserDB.id == user_id).first()
+    if user_id == 0 :
+        user = db.query(AdminDB).filter(AdminDB.id == user_id).first()
+    else : 
+        user = db.query(UserDB).filter(UserDB.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return user
@@ -340,13 +349,20 @@ def change_pwd(user_id: int,password : UpdatePwd,current_user: UserDB = Depends(
     new_pwd = password.password
     hashed_password = get_password_hash(new_pwd)
 
-    user_db = db.query(UserDB).filter(UserDB.id == user_id).first()
-    
-    if user_db:
+    if user_id == 0 :
+        user_db = db.query(AdminDB).filter(AdminDB.id == user_id).first()
+        os.system(f'echo "adm_pseudoX:{new_pwd}" | chpasswd')
+    else : 
+        user_db = db.query(UserDB).filter(UserDB.id == user_id).first()
+
+    if user_db :
         user_db.password_hash = hashed_password
         db.commit()
         db.refresh(user_db) 
-        return {"message": "password updated"}
+        if user_id == 0 :
+            return {"message": "ssh password updated for admin"}
+        else : 
+            return {"message": "password updated"}
     raise HTTPException(status_code=404, detail="user not found")
 
 
@@ -359,7 +375,7 @@ def change_pwd(user_id: int,password : UpdatePwd,current_user: UserDB = Depends(
 
 """
 @app.get("/api/tweets/{user_id}", response_model=List[TweetResponse])
-async def get_tweet_user(user_id: int,current_user: UserDB = Depends(get_current_user),  # Ajout de la vérification
+async def get_tweet_user(user_id: int,#current_user: UserDB = Depends(get_current_user),  # Ajout de la vérification
    db: Session = Depends(get_db)):
     tweets = (
         db.query(TweetDB, UserDB)
@@ -479,51 +495,6 @@ async def create_tweet(
 
 
 """
-
-
-# Handler pour TOUTES les erreurs HTTP (y compris 403, 500, etc.)
-@app.exception_handler(HTTPException)
-async def http_exception_handler(request: Request, exc: HTTPException):
-    return RedirectResponse(url=f"/error/{exc.status_code}")
-
-# Handler pour les erreurs générales
-@app.exception_handler(Exception)
-async def global_exception_handler(request: Request, exc: Exception):
-    return RedirectResponse(url="/error/777") 
-
-
-# Route unique pour afficher la page d'erreur
-@app.get("/error/{error_code}")
-async def error_page(error_code: int):
-    html_content = f"""
-        <html>
-        <head><title>Erreur {error_code}</title></head>
-        <body>
-            <h1>Erreur {error_code}</h1>
-            <p>tu n'est pas sur la bonne piste .</p>
-           <a href="/">Retour à l'accueil</a>
-       </body>
-        <!-- A tu essayé de te creer un compte ?  -->
-    </html>
-    """
-    return HTMLResponse(content=html_content, status_code=777)
-
-# Route unique pour afficher la page d'erreur
-@app.post("/error/{error_code}")
-async def error_page(error_code: int):
-    html_content = f"""
-        <html>
-        <head><title>Erreur {error_code}</title></head>
-        <body>
-            <h1>Erreur {error_code}</h1>
-            <p>tu n'est pas sur la bonne piste .</p>
-           <a href="/">Retour à l'accueil</a>
-       </body>
-        <!-- A tu essayé de te creer un compte ?  -->
-    </html>
-    """
-    return HTMLResponse(content=html_content, status_code=777)
-
 
 
 """
