@@ -1,5 +1,6 @@
 let currentUser = null;
 
+
 // Récupère l'ID utilisateur depuis l'URL
 function getUserIdFromUrl() {
     const params = new URLSearchParams(window.location.search);
@@ -25,16 +26,13 @@ async function loadProfile() {
         document.getElementById('fullName').value = user.full_name || '';
         document.getElementById('email').value = user.email || '';
 
-        // Affiche la section admin si l'utilisateur est admin
-        if (user.is_admin) {
-            document.querySelector('.admin').style.display = 'block';
-        }
-
         currentUser = user;
+
     } catch (error) {
         alert('Erreur de chargement du profil');
     }
 }
+
 
 async function displayUserTweet(){
     const tweetsContainer = document.getElementById('container');
@@ -42,7 +40,7 @@ async function displayUserTweet(){
     tweetsContainer.innerHTML = "";
     try {
         // Faire une requête GET à l'API pour obtenir les tweets
-        const response = await fetch(`/api/tweets/${getUserIdFromUrl()}`,{
+        const response = await fetch(`/api/tweets/${currentUser.id}`,{
             method : 'GET', 
             headers: {
                 'Authorization': `Bearer ${token}`,
@@ -55,32 +53,36 @@ async function displayUserTweet(){
         const data = await response.json();
     
     // Vérifier si les données sont valides
-    
-    
-    // Data est une liste d'objets avec {user, tweet}
-    // On va parcourir chaque objet pour afficher le tweet et l'utilisateur
-    tweetsContainer.innerHTML = data.map(entry => {
-      const user = entry.user;
-      const tweet = entry.tweet;
-      
-      return `
-        <div class="tweet">
-          <div class="tweet-header">
-            <img src="${user.avatar}" alt="${user.full_name}" class="tweet-avatar" />
-            <div>
-              <div class="tweet-author">${user.full_name}</div>
-              <div class="tweet-username">@${user.username}</div>
+    if (data.length === 0) {
+        tweetsContainer.innerHTML = '<p>Vous n\'avez pas écrit de tweet.</p>';
+        return;
+    }
+    else{
+        // Data est une liste d'objets avec {user, tweet}
+        // On va parcourir chaque objet pour afficher le tweet et l'utilisateur
+        tweetsContainer.innerHTML = data.map(entry => {
+        const user = entry.user;
+        const tweet = entry.tweet;
+        
+        return `
+            <div class="tweet">
+            <div class="tweet-header">
+                <img src="${user.avatar}" alt="${user.full_name}" class="tweet-avatar" />
+                <div>
+                <div class="tweet-author">${user.full_name}</div>
+                <div class="tweet-username">@${user.username}</div>
+                </div>
             </div>
-          </div>
-          <div class="tweet-content">${tweet.content}</div>
-          <div class="tweet-actions">
-            <button onclick="likeTweet(${tweet.id})">❤️ ${tweet.likes}</button>
-            <button onclick="retweet(${tweet.id})">🔁 ${tweet.retweets}</button>
-            <button onclick="shareTweet(${tweet.id})">🔗 Share</button>
-          </div>
-        </div>
-      `;
-    }).join('');
+            <div class="tweet-content">${tweet.content}</div>
+            <div class="tweet-actions">
+                <button onclick="likeTweet(${tweet.id})">❤️ ${tweet.likes}</button>
+                <button onclick="retweet(${tweet.id})">🔁 ${tweet.retweets}</button>
+                <button onclick="shareTweet(${tweet.id})">🔗 Share</button>
+            </div>
+            </div>
+        `;
+        }).join('');
+    }
   } catch (error) {
     console.error('Erreur lors du chargement des tweets:', error);
     tweetsContainer.innerHTML = '<p>Impossible de récupérer les tweets.</p>';
@@ -103,7 +105,11 @@ function displayParameter(){
             
             <!-- Section Informations Utilisateur -->
             <div class="profile-card">
+                <h2>Nom d'utilisateur: <span id="username">${currentUser ? currentUser.username : ''}</span></h2> 
+            </div>
+            <div class="profile-card">
                 <h2>Informations Personnelles</h2>
+                <p>Nom d'utilisateur: <span id="username">${currentUser ? currentUser.username : ''}</span></p>
                 <form id="profileForm">
                     <input type="text" id="fullName" placeholder="Nom complet">
                     <input type="email" id="email" placeholder="Email">
@@ -133,7 +139,6 @@ function displayParameter(){
 }
 
 
-    // Ce code ne sera exécuté qu'une fois que le DOM est complètement chargé
 
 function PasswordManager(){    // Gestion du formulaire de mot de passe
     const passwordForm = document.getElementById('passwordForm');
