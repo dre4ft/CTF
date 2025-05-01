@@ -21,7 +21,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 
 # Chemin des fichiers : 
 
-path = "/var/www/html/"
+path = "/root/"
 
 # Configuration de la sécurité
 SECRET_KEY = "your-secret-key-here"  # À changer en production !
@@ -86,20 +86,6 @@ Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
-"""
-# Middleware pour intercepter les erreurs 404
-class Catch404Middleware(BaseHTTPMiddleware):
-    async def dispatch(self, request: Request, call_next):
-        # Si la requête est déjà sur la page d'erreur, ne pas rediriger
-        if request.url.path.startswith("/error"):
-            response = await call_next(request)
-        else:
-            response = await call_next(request)
-            if response.status_code == 404:
-                response = RedirectResponse(url="/error/404")
-        return response
-
-"""
 
 # CORS middleware avec restrictions
 app.add_middleware(

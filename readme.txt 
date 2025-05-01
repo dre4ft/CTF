@@ -1,0 +1,13 @@
+l'objectif de ce ctf est de gagner acces au serveur hebergant le site 
+puis de gagner acces au dossier /root/ ou ce trouve le flag 
+
+Soyez fairplay : ne lisait pas les differents fichiers et ne vous connectez par directement au docker avec "docker exec" 
+
+creer l'image : 
+docker build -t ctf .
+
+creer le conteneur : 
+docker run -d -p 6080:80 -p 6022:22 --name ctf_container ctf
+
+
+

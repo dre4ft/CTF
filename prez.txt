@@ -1,0 +1,24 @@
+Ok donc pour le ctf je suis partie sur un twitter-like
+
+La vulnérabilité que je souhaite que les utilisateurs exploitent est un IDOR ( top 1 OWASP Web) 
+En gros le serveur ne check pas quand on fait un GET /profile?user_id=X que la valeur passer 
+En paramètre de la requete est bien la meme que le user_id de l’appelant ce 
+qui permet d’accéder au profile d’autre utilisateur. Il faut donc ce creer un compte 
+sur la plateforme pour pouvoir accéder a sont propose profile afin de requete d’endpoint 
+/profile qui est inaccessible pour les prospects 
+
+L’objectif ici est de trouver par déduction ou par itérations le profile de l’admin du site 
+Les profiles utilisateurs permettent de voir nos tweets mais aussi de modifier des informations 
+du compte dont le mot de passe, mot de passe qui pour l’admin en cas de modification modifie 
+aussi le compte admin sur le serveur ce qui permet de débloquer une connexion ssh sur le serveur, 
+le probleme c’est que l’admin n’a pas trop de privilege local sur la machine, mais il a les droit 
+sudo sur vim ce qui permet de faire une élévation de privilege pour atteindre le dossier /root/ 
+ou ce trouve le flag 
+
+il peut ensuite checker le flag sur le python qui le permet por verifier que c'est bien le bon flag 
+
+pour les besoin de test : 
+
+Adm_pseudoX passwd : S1TuL1tC4T3sUnNULL
+
+Flag : K7vLp4zqD2xMf8WsYe9TuVbC0nJhA
