@@ -9,7 +9,7 @@ Votre objectif est de trouver ce mot de passe et de le tester avec le script `"c
 **Soyez fair-play** : ne lisez pas les différents fichiers et ne vous connectez pas directement au docker avec `"docker exec"`.
 Pas de brute force nécessaire pour résoudre ce challenge.
 
-L'unique indice que vous **aurez** est : **TOP 1 OWASP WEB**
+L'unique indice que vous **aurez** est : **TOP 10 OWASP WEB**
 
 ---
 
