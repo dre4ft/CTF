@@ -15,14 +15,14 @@ async function loadProfile() {
 
     try {
         const response = await fetch(`http://localhost:6080/api/users/${userId}`,{
-            method : 'GET', 
+            method : 'GET',
             headers: {
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
             }
         });
         const user = await response.json();
-    
+
         currentUser = user;
         return user;
 
@@ -40,7 +40,7 @@ async function displayUserTweet(){
     try {
         // Faire une requête GET à l'API pour obtenir les tweets
         const response = await fetch(`/api/tweets/${getUserIdFromUrl()}`,{
-            method : 'GET', 
+            method : 'GET',
             headers: {
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
@@ -50,7 +50,7 @@ async function displayUserTweet(){
             throw new Error('Erreur lors de la récupération des tweets');
         }
         const data = await response.json();
-    
+
     // Vérifier si les données sont valides
     if (data.length === 0) {
         tweetsContainer.innerHTML = '<p>Vous n\'avez pas écrit de tweet.</p>';
@@ -62,7 +62,7 @@ async function displayUserTweet(){
         tweetsContainer.innerHTML = data.map(entry => {
         const user = entry.user;
         const tweet = entry.tweet;
-        
+
         return `
             <div class="tweet">
             <div class="tweet-header">
@@ -100,12 +100,12 @@ async function displayParameter(){
         return;
     }
     profileSection.innerHTML = `
-            
+
             <h1>Paramètres du Profil</h1>
-            
+
             <!-- Section Informations Utilisateur -->
             <div class="profile-card">
-                <h2>Nom d'utilisateur: <span id="username">${user ? user.username : ''}</span></h2> 
+                <h2>Nom d'utilisateur: <span id="username">${user ? user.username : ''}</span></h2>
             </div>
             <div class="profile-card">
                 <h2>Informations Personnelles</h2>
@@ -124,14 +124,10 @@ async function displayParameter(){
                     <button type="submit">Changer le mot de passe</button>
                 </form>
                <!-- 💡 Aucune vérification de l'ancien mot de passe nécessaire ! -->
-                     
+
             </div>
 
-            <!-- Section Admin (cachée par défaut) -->
-            <div class="profile-card admin" style="display: none;">
-                <h2>🔒 Accès Administrateur</h2>
-                <button onclick="location.href='/ssh'">Se connecter au Backend</button>
-            </div>
+
         `;
         PasswordManager();
 }
@@ -145,14 +141,14 @@ function PasswordManager(){    // Gestion du formulaire de mot de passe
         passwordForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const newPassword = document.getElementById('newPassword').value;
-            
+
             try {
                 const response = await fetch(`/api/users/${getUserIdFromUrl()}/password`, {
                     method: 'PATCH',
-                    headers: { 
+                    headers: {
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
+                    body: JSON.stringify({
                         password: newPassword })
                 });
 
@@ -162,7 +158,7 @@ function PasswordManager(){    // Gestion du formulaire de mot de passe
             }
         });
     }
-    
+
 }
 
 function goHome(){
@@ -177,8 +173,8 @@ async function checkAuth() {
         return;
     }
     await displayUserTweet();;
-    
-    
+
+
 }
 
 // Initialisation

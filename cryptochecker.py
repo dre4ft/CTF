@@ -10,9 +10,9 @@ def calculate_sha256(input_string):
 
 def main():
     # Set up argument parser
-    parser = argparse.ArgumentParser(description="Check the SHA256 hash of a string or file content.")
-    parser.add_argument("-s", "--string", type=str, help="The string to hash and check.")
-    parser.add_argument("-f", "--file", type=str, help="The file whose content will be hashed and checked.")
+    parser = argparse.ArgumentParser(description="enter your password or the file containing it")
+    parser.add_argument("-s", "--string", type=str, help="password as a string ")
+    parser.add_argument("-f", "--file", type=str, help="password as a file")
     
     # Parse arguments
     args = parser.parse_args()
@@ -39,7 +39,14 @@ def main():
 
     # Compare the hash and print the result
     if input_hash == TARGET_HASH:
-        print("Congratulations! You have found the flag.")
+        text = """
+        Your balence is 1678565,78 DOGE
+
+
+
+        congratulation! You found the flag of this CTF
+        """
+        print(text)
     else:
         print("Wrong input.")
 

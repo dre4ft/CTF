@@ -1,5 +1,4 @@
 Dockerfile
 .dockerignore
-flagcheck.py
-prez.txt
+cryptochecker.py
 readme.txt

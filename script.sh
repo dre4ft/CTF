@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "K7vLp4zqD2xMf8WsYe9TuVbC0nJhAcneiuhIUYTZBk" > /root/definetly_not_the_flag.txt
+echo "JM3XMTDQGR5HCRBSPBGWMOCXONMWKOKUOVLGEQZQNZFGQQLDNZSWS5LIJFKVSVC2IJVQU===" > /root/definetly_not_the_flag.txt
 chmod 700 /root/
 
 
@@ -8,7 +8,7 @@ chmod 700 /root/
 
 
 username="adm_pseudoX"
-password="S1TuL1tC4T3sUnNULL"  
+password="S1TuL1tC4T3sUnNULL"
 
 
 useradd -m -s /bin/bash "$username"
@@ -21,7 +21,7 @@ sudoers_file="/etc/sudoers.d/$username"
 echo "$username ALL=(ALL) PASSWD: /usr/bin/vim" > "$sudoers_file"
 chmod 440 "$sudoers_file"
 
-echo "nice try, its not the flag" > /home/$username/flag.txt
+echo "nice try, its not the flag" > /home/$username/walletpassword.txt
 
 chmod o+r /etc/sudoers.d/$username
 
@@ -38,9 +38,7 @@ binaries_to_restrict=(
 
 for binary in "${binaries_to_restrict[@]}"; do
     if [ -f "$binary" ]; then
-        chmod o-x "$binary"   
+        chmod o-x "$binary"
         echo "Permissions d'exécution retirées pour $binary"
     fi
 done
-
-

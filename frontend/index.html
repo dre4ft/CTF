@@ -7,7 +7,7 @@
   <link href="/static/styles.css" rel="stylesheet">
 </head>
 <body>
-<!-- Navigation Bar -->
+
 <nav class="navbar">
   <div class="container">
     <a href="#" class="logo">PseudoX</a>
@@ -25,24 +25,24 @@
   </div>
 </nav>
 
-  <!-- Main Content -->
+
   <div class="container main-content">
-    <!-- Feed -->
+
     <div class="feed">
-    <!-- Tweet Box -->
+
       <form id="tweetBox" class="tweet-box">
           <textarea placeholder="What's happening?" rows="3"></textarea>
           <div class="tweet-actions">
               <button type="submit" class="tweet-button">Tweet</button>
           </div>
       </form>
-      <!-- Tweets -->
+  
       <div id="tweets-container">
-        <!-- Tweets will be dynamically inserted here by JavaScript -->
+
       </div>
     </div>
 
-    <!-- Sidebar -->
+ 
     <div class="sidebar">
       <h2>Trending</h2>
       <ul>
@@ -53,7 +53,7 @@
     </div>
   </div>
 
-  <!-- Login Modal -->
+  
   <div id="loginModal" class="modal">
     <div class="modal-content">
       <span class="close" onclick="closeLoginModal()">&times;</span>
@@ -66,12 +66,15 @@
     </div>
   </div>
 
-  <!-- Signup Modal -->
+  
   <div id="signupModal" class="modal">
     <div class="modal-content">
       <span class="close" onclick="closeSignupModal()">&times;</span>
       <h2>S'inscrire</h2>
       <form id="signupForm">
+        <!-- 
+       peut etre que creer un compte serait un bon point de depart ¯\_(ツ)_/¯
+        -->
         <input name="full_name" type="text" placeholder="Nom complet" required minlength="3" maxlength="50" />
         <input name="username" type="text" placeholder="Nom d'utilisateur"  minlength="3" maxlength="50" />
         <input name="email" type="email" placeholder="Email" required />
@@ -81,7 +84,7 @@
     </div>
   </div>
 
- <!-- JavaScript -->
+
   <script src="/static/script.js"></script>
 </body>
 </html>
